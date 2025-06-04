@@ -12,11 +12,11 @@ headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
-# 🟢 1. Bol.com
+# Bol.com
 def get_from_bol():
     try:
         url = "https://www.bol.com/nl/nl/l/aanbiedingen/47915/"
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one("li.product-item--row")
         if not product:
@@ -28,13 +28,13 @@ def get_from_bol():
 
         return f"📌 من Bol.com\n📦 {title}\n💰 {price}\n🔗 {link}"
     except Exception as e:
-        return f"❌ Bol.com: خطأ - {e}"
+        return f"❌ Bol.com: خطأ - {str(e)}"
 
-# 🟢 2. Gamma
+# Gamma
 def get_from_gamma():
     try:
         url = "https://www.gamma.nl/aanbiedingen"
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".product-tile")
         if not product:
@@ -46,13 +46,13 @@ def get_from_gamma():
 
         return f"📌 من Gamma\n📦 {title}\n💰 {price}\n🔗 {link}"
     except Exception as e:
-        return f"❌ Gamma: خطأ - {e}"
+        return f"❌ Gamma: خطأ - {str(e)}"
 
-# 🟢 3. Blokker
+# Blokker
 def get_from_blokker():
     try:
         url = "https://www.blokker.nl/aanbiedingen"
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".product-grid .product-item")
         if not product:
@@ -64,13 +64,13 @@ def get_from_blokker():
 
         return f"📌 من Blokker\n📦 {title}\n💰 {price}\n🔗 {link}"
     except Exception as e:
-        return f"❌ Blokker: خطأ - {e}"
+        return f"❌ Blokker: خطأ - {str(e)}"
 
-# 🟢 4. Amazon NL (نبحث عن خصومات)
+# Amazon
 def get_from_amazon():
     try:
         url = "https://www.amazon.nl/s?k=aanbiedingen"
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".s-result-item")
         if not product:
@@ -81,7 +81,7 @@ def get_from_amazon():
         price_el = product.select_one(".a-price span")
 
         if not (title_el and link_el and price_el):
-            return "❌ Amazon: مشكلة في قراءة العناصر"
+            return "❌ Amazon: مشكلة في قراءة البيانات"
 
         title = title_el.text.strip()
         link = "https://www.amazon.nl" + link_el["href"]
@@ -89,26 +89,23 @@ def get_from_amazon():
 
         return f"📌 من Amazon\n📦 {title}\n💰 {price}\n🔗 {link}"
     except Exception as e:
-        return f"❌ Amazon: خطأ - {e}"
+        return f"❌ Amazon: خطأ - {str(e)}"
 
-# 📦 أمر واحد يجلب من الكل
+# أمر /deals
 @bot.message_handler(commands=['deals'])
 def send_all_deals(message):
-    try:
-        deals = [
-            get_from_bol(),
-            get_from_gamma(),
-            get_from_blokker(),
-            get_from_amazon()
-        ]
-        response = "\n\n".join(deals)
-        bot.send_message(message.chat.id, response)
-    except Exception as e:
-        bot.send_message(message.chat.id, f"❌ خطأ غير متوقع:\n{str(e)}")
+    deals = [
+        get_from_bol(),
+        get_from_gamma(),
+        get_from_blokker(),
+        get_from_amazon()
+    ]
+    bot.send_message(message.chat.id, "\n\n".join(deals))
 
+# أمر /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, "أهلاً بك في بوت العروض 💸\nأرسل /deals لجلب المنتجات الرخيصة من أكبر المتاجر الهولندية.")
+    bot.send_message(message.chat.id, "👋 أهلاً بك في بوت العروض!\nأرسل /deals لجلب المنتجات الرخيصة من المتاجر الهولندية 🔥")
 
 print("🤖 البوت التجاري يعمل...")
 bot.polling()
