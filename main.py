@@ -163,8 +163,10 @@ def collect_deals():
 
 @bot.message_handler(commands=['start'])
 def welcome(message):
-    bot.send_message(message.chat.id, "👋 أهلاً بك في بوت العروض
-اكتب /deals لجلب أفضل العروض 🔥")
+    bot.send_message(
+        message.chat.id,
+        "👋 أهلاً بك في بوت العروض! أرسل /deals لجلب المنتجات الرخيصة من المتاجر الهولندية 🔥"
+    )
 
 @bot.message_handler(commands=['deals'])
 def send_manual_deals(message):
