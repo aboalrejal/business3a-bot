@@ -3,11 +3,14 @@ import telebot
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
+
+# ✳️ رقم المعرف الخاص بك في تيليجرام
+USER_CHAT_ID = 556136331  # تأكد أنه صحيح
 
 headers = {
     "User-Agent": "Mozilla/5.0"
@@ -155,24 +158,37 @@ def get_from_amazon():
     except:
         return None
 
-def send_auto_deals():
-    deals = [
+def collect_deals():
+    return [
         get_from_bol(),
         get_from_gamma(),
         get_from_blokker(),
         get_from_amazon()
     ]
-    filtered = [d for d in deals if d]
-    if filtered:
-        bot.send_message(chat_id=YOUR_CHAT_ID, text="\n\n".join(filtered))
+
+@bot.message_handler(commands=['start'])
+def welcome(message):
+    bot.send_message(message.chat.id, "👋 أهلاً بك في بوت العروض\nاكتب /deals لجلب أفضل العروض 🔥")
+
+@bot.message_handler(commands=['deals'])
+def send_manual_deals(message):
+    deals = [d for d in collect_deals() if d]
+    if deals:
+        bot.send_message(message.chat.id, "\n\n".join(deals))
     else:
-        bot.send_message(chat_id=YOUR_CHAT_ID, text="❌ لا يوجد عروض اليوم بخصم 50٪ أو أكثر.")
+        bot.send_message(message.chat.id, "❌ لا يوجد عروض حالياً بخصم 50٪ أو أكثر.")
 
-# ✳️ ضع رقم معرفك هنا (Telegram User ID)
-YOUR_CHAT_ID = 556136331  # عدله إن لزم
+def send_auto_deals():
+    deals = [d for d in collect_deals() if d]
+    if deals:
+        bot.send_message(USER_CHAT_ID, "📢 عروض جديدة كل يومين:\n\n" + "\n\n".join(deals))
+    else:
+        bot.send_message(USER_CHAT_ID, "📢 لا يوجد عروض بخصم 50٪ أو أكثر اليوم.")
 
-# 🕒 جدولة كل يومين
-scheduler = BlockingScheduler()
+# جدولة تلقائية كل يومين
+scheduler = BackgroundScheduler()
 scheduler.add_job(send_auto_deals, 'interval', days=2)
-print("🤖 البوت التجاري يعمل تلقائياً كل يومين...")
 scheduler.start()
+
+print("🤖 البوت يعمل تلقائيًا + يدويًا...")
+bot.polling()
