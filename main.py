@@ -3,6 +3,7 @@ import telebot
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -19,7 +20,7 @@ def get_from_bol():
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one("li.product-item--row")
         if not product:
-            return "❌ Bol.com: لا يوجد عرض حالياً"
+            return None
 
         title = product.select_one("a.product-title").text.strip()
         link = "https://www.bol.com" + product.select_one("a.product-title")["href"]
@@ -27,14 +28,14 @@ def get_from_bol():
         old_price_el = product.select_one(".promo-price--old")
 
         if not current_price_el or not old_price_el:
-            return "❌ Bol.com: لا يوجد خصم كافي حالياً"
+            return None
 
         price_now = float(current_price_el.text.strip().replace("€", "").replace(",", "."))
         price_before = float(old_price_el.text.strip().replace("€", "").replace(",", "."))
         discount = round(((price_before - price_now) / price_before) * 100)
 
         if discount < 50:
-            return "❌ Bol.com: الخصم أقل من 50% - تم تجاهله"
+            return None
 
         return (
             f"📌 من Bol.com\n"
@@ -44,8 +45,8 @@ def get_from_bol():
             f"📉 الخصم: {discount}%\n"
             f"🔗 {link}"
         )
-    except Exception as e:
-        return f"❌ Bol.com: خطأ - {str(e)}"
+    except:
+        return None
 
 def get_from_gamma():
     try:
@@ -54,7 +55,7 @@ def get_from_gamma():
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".product-tile")
         if not product:
-            return "❌ Gamma: لا يوجد عرض حالياً"
+            return None
 
         title = product.select_one(".title").text.strip()
         link = "https://www.gamma.nl" + product.select_one("a")["href"]
@@ -62,14 +63,14 @@ def get_from_gamma():
         old_price_el = product.select_one(".old-price")
 
         if not current_price_el or not old_price_el:
-            return "❌ Gamma: لا يوجد خصم كافي حالياً"
+            return None
 
         price_now = float(current_price_el.text.strip().replace("€", "").replace(",", "."))
         price_before = float(old_price_el.text.strip().replace("€", "").replace(",", "."))
         discount = round(((price_before - price_now) / price_before) * 100)
 
         if discount < 50:
-            return "❌ Gamma: الخصم أقل من 50% - تم تجاهله"
+            return None
 
         return (
             f"📌 من Gamma\n"
@@ -79,8 +80,8 @@ def get_from_gamma():
             f"📉 الخصم: {discount}%\n"
             f"🔗 {link}"
         )
-    except Exception as e:
-        return f"❌ Gamma: خطأ - {str(e)}"
+    except:
+        return None
 
 def get_from_blokker():
     try:
@@ -89,7 +90,7 @@ def get_from_blokker():
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".product-grid .product-item")
         if not product:
-            return "❌ Blokker: لا يوجد عرض حالياً"
+            return None
 
         title = product.select_one(".product-title").text.strip()
         link = "https://www.blokker.nl" + product.select_one("a")["href"]
@@ -97,14 +98,14 @@ def get_from_blokker():
         old_price_el = product.select_one(".list-price")
 
         if not current_price_el or not old_price_el:
-            return "❌ Blokker: لا يوجد خصم كافي حالياً"
+            return None
 
         price_now = float(current_price_el.text.strip().replace("€", "").replace(",", "."))
         price_before = float(old_price_el.text.strip().replace("€", "").replace(",", "."))
         discount = round(((price_before - price_now) / price_before) * 100)
 
         if discount < 50:
-            return "❌ Blokker: الخصم أقل من 50% - تم تجاهله"
+            return None
 
         return (
             f"📌 من Blokker\n"
@@ -114,8 +115,8 @@ def get_from_blokker():
             f"📉 الخصم: {discount}%\n"
             f"🔗 {link}"
         )
-    except Exception as e:
-        return f"❌ Blokker: خطأ - {str(e)}"
+    except:
+        return None
 
 def get_from_amazon():
     try:
@@ -124,7 +125,7 @@ def get_from_amazon():
         soup = BeautifulSoup(res.text, "html.parser")
         product = soup.select_one(".s-result-item")
         if not product:
-            return "❌ Amazon: لا يوجد عرض حالياً"
+            return None
 
         title_el = product.select_one("h2 a span")
         link_el = product.select_one("h2 a")
@@ -132,7 +133,7 @@ def get_from_amazon():
         old_price_el = product.select_one(".a-text-price .a-offscreen")
 
         if not (title_el and link_el and price_el and old_price_el):
-            return "❌ Amazon: لا يوجد خصم كافي حالياً"
+            return None
 
         title = title_el.text.strip()
         link = "https://www.amazon.nl" + link_el["href"]
@@ -141,7 +142,7 @@ def get_from_amazon():
         discount = round(((price_before - price_now) / price_before) * 100)
 
         if discount < 50:
-            return "❌ Amazon: الخصم أقل من 50% - تم تجاهله"
+            return None
 
         return (
             f"📌 من Amazon\n"
@@ -151,24 +152,27 @@ def get_from_amazon():
             f"📉 الخصم: {discount}%\n"
             f"🔗 {link}"
         )
-    except Exception as e:
-        return f"❌ Amazon: خطأ - {str(e)}"
+    except:
+        return None
 
-@bot.message_handler(commands=['deals'])
-def send_all_deals(message):
+def send_auto_deals():
     deals = [
         get_from_bol(),
         get_from_gamma(),
         get_from_blokker(),
         get_from_amazon()
     ]
-    results = [deal for deal in deals if not deal.startswith("❌ الخصم أقل")]
-    bot.send_message(message.chat.id, "\n\n".join(results) if results else "❌ لا يوجد عروض بخصم 50٪ أو أكثر حالياً.")
+    filtered = [d for d in deals if d]
+    if filtered:
+        bot.send_message(chat_id=YOUR_CHAT_ID, text="\n\n".join(filtered))
+    else:
+        bot.send_message(chat_id=YOUR_CHAT_ID, text="❌ لا يوجد عروض اليوم بخصم 50٪ أو أكثر.")
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.send_message(message.chat.id, "👋 أهلاً بك في بوت العروض!\nأرسل /deals لجلب المنتجات المخفضة بنسبة 50٪ أو أكثر 🔥")
+# ✳️ ضع رقم معرفك هنا (Telegram User ID)
+YOUR_CHAT_ID = 556136331  # عدله إن لزم
 
-bot.remove_webhook()
-print("🤖 البوت التجاري يعمل...")
-bot.polling()
+# 🕒 جدولة كل يومين
+scheduler = BlockingScheduler()
+scheduler.add_job(send_auto_deals, 'interval', days=2)
+print("🤖 البوت التجاري يعمل تلقائياً كل يومين...")
+scheduler.start()
