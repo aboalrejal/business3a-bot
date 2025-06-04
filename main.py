@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
+# تحميل متغيرات البيئة
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -12,7 +13,7 @@ headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
-# Bol.com
+# 🔹 Bol.com
 def get_from_bol():
     try:
         url = "https://www.bol.com/nl/nl/l/aanbiedingen/47915/"
@@ -30,7 +31,7 @@ def get_from_bol():
     except Exception as e:
         return f"❌ Bol.com: خطأ - {str(e)}"
 
-# Gamma
+# 🔹 Gamma.nl
 def get_from_gamma():
     try:
         url = "https://www.gamma.nl/aanbiedingen"
@@ -48,7 +49,7 @@ def get_from_gamma():
     except Exception as e:
         return f"❌ Gamma: خطأ - {str(e)}"
 
-# Blokker
+# 🔹 Blokker.nl
 def get_from_blokker():
     try:
         url = "https://www.blokker.nl/aanbiedingen"
@@ -66,7 +67,7 @@ def get_from_blokker():
     except Exception as e:
         return f"❌ Blokker: خطأ - {str(e)}"
 
-# Amazon
+# 🔹 Amazon.nl
 def get_from_amazon():
     try:
         url = "https://www.amazon.nl/s?k=aanbiedingen"
@@ -91,7 +92,7 @@ def get_from_amazon():
     except Exception as e:
         return f"❌ Amazon: خطأ - {str(e)}"
 
-# أمر /deals
+# 🟢 أمر /deals
 @bot.message_handler(commands=['deals'])
 def send_all_deals(message):
     deals = [
@@ -102,10 +103,14 @@ def send_all_deals(message):
     ]
     bot.send_message(message.chat.id, "\n\n".join(deals))
 
-# أمر /start
+# 🟢 أمر /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.send_message(message.chat.id, "👋 أهلاً بك في بوت العروض!\nأرسل /deals لجلب المنتجات الرخيصة من المتاجر الهولندية 🔥")
 
+# 🔧 إزالة الـ Webhook لتفادي الخطأ 409
+bot.remove_webhook()
+
+# ▶️ بدء البوت
 print("🤖 البوت التجاري يعمل...")
 bot.polling()
