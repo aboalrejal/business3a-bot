@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-USER_CHAT_ID = os.getenv("USER_CHAT_ID")  # تأكد من وضع هذا المتغير في .env
+USER_CHAT_ID = os.getenv("USER_CHAT_ID")
 bot = telebot.TeleBot(BOT_TOKEN)
 
 headers = {
@@ -106,11 +106,9 @@ def send_auto_deals():
     else:
         bot.send_message(USER_CHAT_ID, "📢 لا يوجد عروض بخصم 50٪ أو أكثر اليوم.")
 
-# ⏱ جدولة تلقائية كل يومين
 scheduler = BackgroundScheduler()
 scheduler.add_job(send_auto_deals, 'interval', days=2)
 scheduler.start()
 
 print("✅ البوت شغّال الآن ومستعد لاستقبال الأوامر.")
-
 bot.infinity_polling()
